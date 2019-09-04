@@ -1,10 +1,12 @@
-package main
+package user
 
 import (
 	"fmt"
 	"time"
 
 	"github.com/go-sql-driver/mysql"
+	"github.com/henryeveleth/web/db"
+	"github.com/henryeveleth/web/response"
 )
 
 type User struct {
@@ -18,7 +20,7 @@ type User struct {
 }
 
 func GetUser(id int) (User, error) {
-	dbConn := DatabaseConnection()
+	dbConn := db.DatabaseConnection()
 	defer dbConn.Close()
 
 	user := User{}
@@ -57,13 +59,13 @@ func GetUser(id int) (User, error) {
 		return user, nil
 	} else {
 		message := fmt.Sprintf("User %d not found.", id)
-		respError := ResponseError{Message: message}
+		respError := response.ResponseError{Message: message}
 		return user, &respError
 	}
 }
 
 func GetAllUsers() ([]User, error) {
-	dbConn := DatabaseConnection()
+	dbConn := db.DatabaseConnection()
 	defer dbConn.Close()
 
 	query, err := dbConn.Query("SELECT * FROM users WHERE deleted_at IS NULL")
@@ -101,8 +103,8 @@ func GetAllUsers() ([]User, error) {
 	return users, nil
 }
 
-func (user *User) persist() error {
-	dbConn := DatabaseConnection()
+func (user *User) Persist() error {
+	dbConn := db.DatabaseConnection()
 	defer dbConn.Close()
 
 	id := user.Id
@@ -136,7 +138,7 @@ func (user *User) persist() error {
 }
 
 func UserExists(id int) (bool, error) {
-	dbConn := DatabaseConnection()
+	dbConn := db.DatabaseConnection()
 	defer dbConn.Close()
 
 	query, err := dbConn.Query("SELECT COUNT(*) FROM users WHERE id=?", id)

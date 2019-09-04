@@ -1,4 +1,4 @@
-package main
+package db
 
 import (
 	"database/sql"
@@ -7,11 +7,7 @@ import (
 )
 
 func DatabaseConnection() (db *sql.DB) {
-	dbDriver := "mysql"
-	dbUser := "root"
-	dbName := "go"
-
-	db, err := sql.Open(dbDriver, dbUser+"@/"+dbName+"?parseTime=true")
+	db, err := sql.Open("mysql", "root@tcp(db:3306)/go?parseTime=true")
 
 	if err != nil {
 		panic(err.Error())

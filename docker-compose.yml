@@ -1,0 +1,25 @@
+version: "3.1"
+
+services:
+  web:
+    restart: unless-stopped
+    image: go-user-crud
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+
+  db:
+    restart: unless-stopped
+    image: mysql:5.7
+    ports:
+      - 3306:3306
+    volumes:
+      - mysql-web-go:/var/lib/mysql
+      - ./init.sql:/data/application/mysql/init.sql
+    command: --init-file /data/application/mysql/init.sql
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "true"
+
+volumes:
+  mysql-web-go:

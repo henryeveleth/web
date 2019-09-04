@@ -9,6 +9,8 @@ import (
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
+	"github.com/henryeveleth/web/response"
+	"github.com/henryeveleth/web/user"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -16,7 +18,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	log.Print("STARTING INDEX")
 
 	w.Header().Set("Content-Type", "application/json")
-	users, err := GetAllUsers()
+	users, err := user.GetAllUsers()
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -39,7 +41,7 @@ func Show(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	if id, err := strconv.Atoi(vars["id"]); err == nil {
-		user, err := GetUser(id)
+		user, err := user.GetUser(id)
 
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
@@ -76,15 +78,15 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	decoder := json.NewDecoder(r.Body)
 
-	var user User
-	err := decoder.Decode(&user)
+	var u user.User
+	err := decoder.Decode(&u)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 
-		response := ResponseError{Message: "Bad arguments."}
+		resp := response.ResponseError{Message: "Bad arguments."}
 
-		js, err := json.Marshal(response)
+		js, err := json.Marshal(resp)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -94,7 +96,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = user.persist()
+	err = u.Persist()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -111,7 +113,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
 	if id, err := strconv.Atoi(vars["id"]); err == nil {
-		user, err := GetUser(id)
+		u, err := user.GetUser(id)
 
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
@@ -126,14 +128,14 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			w.Write(js)
 			return
 		} else {
-			err := decoder.Decode(&user)
+			err := decoder.Decode(&u)
 
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
 
-				response := ResponseError{Message: "Bad arguments."}
+				resp := response.ResponseError{Message: "Bad arguments."}
 
-				js, err := json.Marshal(response)
+				js, err := json.Marshal(resp)
 				if err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
@@ -143,7 +145,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			err = user.persist()
+			err = u.Persist()
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -159,7 +161,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	if id, err := strconv.Atoi(vars["id"]); err == nil {
-		user, err := GetUser(id)
+		u, err := user.GetUser(id)
 
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
@@ -174,12 +176,12 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 			w.Write(js)
 			return
 		} else {
-			user.DeletedAt = mysql.NullTime{
+			u.DeletedAt = mysql.NullTime{
 				Time:  time.Now(),
 				Valid: true,
 			}
 
-			err = user.persist()
+			err = u.Persist()
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
